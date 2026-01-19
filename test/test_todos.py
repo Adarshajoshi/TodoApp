@@ -1,4 +1,5 @@
-from sqlalchemy import create_engine
+import pytest
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 from ..database import Base
@@ -6,6 +7,7 @@ from ..main import app
 from ..routers.todos import get_db,get_current_user
 from fastapi.testclient import TestClient
 from fastapi import status
+from ..models import Todos
 
 SQLALCHEMY_DATABASE_URL="sqlite:///./testdb.db"
 
@@ -36,7 +38,41 @@ app.dependency_overrides[get_current_user]=override_get_current_user
 
 client=TestClient(app)
 
-def test_read_all_authenticated():
+@pytest.fixture
+def test_todo():
+    todo=Todos(
+        title="Learn to code!",description="Learn everyday",
+        priority=5,complete=False,
+        owner_id=1
+    )
+    db=TestingSessionLocal()
+    db.add(todo)
+    db.commit()
+    yield todo
+    with engine.connect() as connection:
+        connection.execute(text("Delete from todos;"))
+        connection.commit()
+
+
+def test_read_all_authenticated(test_todo):
     response = client.get("/")
-    assert response.status_code == 200
-    assert response.json()==[]
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()==[{'complete':False,
+                              'title':'Learn to code!',
+                              'description':'Learn everyday',
+                              'id':1,'priority':5,
+                              'owner_id':1}]
+
+def test_read_one_authenticated(test_todo):
+    response = client.get("/todo/1")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()=={'complete':False,
+                              'title':'Learn to code!',
+                              'description':'Learn everyday',
+                              'id':1,'priority':5,
+                              'owner_id':1}
+
+def test_read_one_authenticated_not_found(test_todo):
+    response = client.get("/todo/999")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()=={'detail':'Not found'}
