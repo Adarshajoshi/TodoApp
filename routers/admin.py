@@ -20,6 +20,7 @@ def get_db():
 db_dependency=Annotated[Session,Depends(get_db)]
 user_dependency=Annotated[dict,Depends(get_current_user)]
 
+
 @router.get("/todo",status_code=status.HTTP_200_OK)
 async def read_all(user:user_dependency,db:db_dependency):
     if user is not None or user.get('user_role')!='admin':
@@ -35,3 +36,4 @@ async def delete_todo(user:user_dependency,db:db_dependency,todo_id:int=Path(gt=
         raise HTTPException(status_code=404,detail="Todo not found")
     db.query(Todos).filter(Todos.id==todo_id).delete()
     db.commit()
+
