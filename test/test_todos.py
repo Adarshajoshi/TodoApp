@@ -76,3 +76,11 @@ def test_read_one_authenticated_not_found(test_todo):
     response = client.get("/todo/999")
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()=={'detail':'Not found'}
+
+def test_create_todo(test_todo):
+    request_data={
+        'title': 'New Todo!',
+        'description':'New todo description',
+        'priority': 5,
+        'complete': False,
+    }
