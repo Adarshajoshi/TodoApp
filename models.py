@@ -1,6 +1,7 @@
 from .database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 
+
 class Users(Base):
     __tablename__ = 'users'
 
@@ -22,4 +23,4 @@ class Todos(Base):
     description = Column(String)
     priority = Column(Integer)
     complete = Column(Boolean, default=False)
-    owner_id=Column(Integer,ForeignKey("users.id"))
+    owner_id = Column(Integer, ForeignKey("users.id"))
